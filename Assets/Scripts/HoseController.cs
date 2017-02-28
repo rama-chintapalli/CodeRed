@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Effects;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class HoseController : MonoBehaviour {
 	private ParticleSystem[] m_Systems;
+	public Text currentExtinguisher;
 	// Use this for initialization
 	void Start () {
 		m_Systems = GetComponentsInChildren<ParticleSystem>();
@@ -29,9 +31,13 @@ public class HoseController : MonoBehaviour {
 		if (GvrController.ClickButtonDown) {
 			// Do something.
 			// TouchDown is true for 1 frame after touchpad is touched.
+			Vector2 touchPos = GvrController.TouchPos;
+			string clickPosition = checkTouchPadClickPosition (touchPos);
+			if (clickPosition.Equals ("CENTER")) {
+				StartHoseMaterial ();
+				this.GetComponent<GvrAudioSource> ().Play ();
+			}
 			Debug.Log("Click Button Down");
-			StartHoseMaterial ();
-			this.GetComponent<GvrAudioSource> ().Play ();
 
 		}
 		if (GvrController.ClickButtonUp) {
@@ -74,23 +80,27 @@ public class HoseController : MonoBehaviour {
 
 	public void SelectHoseMaterial(string materialName)
 	{
-		//resetScene ();
-
 		foreach (var system in m_Systems)
 		{
 			var mainModule = system.main;
 			if(materialName.Equals("waterfoam")){
 				mainModule.startColor = Color.white;
+				currentExtinguisher.text = "Water Foam";
 			}else if(materialName.Equals("carbondioxide")){
 				mainModule.startColor = Color.red;
+				currentExtinguisher.text = "Carbon Dioxide";
 			}else if(materialName.Equals("drychemical")){
 				mainModule.startColor = Color.cyan;
+				currentExtinguisher.text = "Dry Chemical";
 			}else if(materialName.Equals("drypowder")){
 				mainModule.startColor = Color.yellow;
+				currentExtinguisher.text = "Dry Powder";
 			}else if(materialName.Equals("wetchemical")){
 				mainModule.startColor = Color.blue;
+				currentExtinguisher.text = "Wet Chemical";
 			}else if(materialName.Equals("watermist")){
 				mainModule.startColor = Color.gray;
+				currentExtinguisher.text = "Water Mist";
 			}
 
 		}
@@ -98,5 +108,19 @@ public class HoseController : MonoBehaviour {
 
 	private void resetScene(){
 		SceneManager.LoadScene ("CodeRedMain");
+	}
+	public string checkTouchPadClickPosition(Vector2 touchPos){
+		if ((touchPos.x > 0.4 && touchPos.x < 0.6) && (touchPos.y < 0.1)) {
+			return "TOP";
+		} else if ((touchPos.x > 0.9) && (touchPos.y > 0.4 && touchPos.y < 0.6)) {
+			return "RIGHT";
+		} else if ((touchPos.x > 0.4 && touchPos.x < 0.6) && (touchPos.y > 0.9)) {
+			return "BOTTOM";
+		} else if ((touchPos.x < 0.1) && (touchPos.y > 0.4 && touchPos.y < 0.6)) {
+			return "LEFT";
+		}else if((touchPos.x > 0.4 && touchPos.x < 0.6) &&(touchPos.y > 0.4 && touchPos.y < 0.6)){
+			return "CENTER";
+		}
+		return "TOP";
 	}
 }
