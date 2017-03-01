@@ -25,7 +25,7 @@ public class HoseController : MonoBehaviour {
 
 		// ...or you can just change the rotation of some entity on your scene
 		// (e.g. the player's arm) to match the controller's orientation
-		this.transform.localRotation = ori;
+		this.transform.rotation = ori;
 
 		// Example: check if touchpad was just touched
 		if (GvrController.ClickButtonDown) {
