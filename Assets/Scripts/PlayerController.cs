@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour {
 	public GameObject player;
+	public GameObject mainCamera;
 
 	public GameObject firstWayPoint;
 	public GameObject secondWayPoint;
@@ -19,7 +20,6 @@ public class PlayerController : MonoBehaviour {
 	public Slider healthBarSlider; 
 	private bool isGameOver = false;
 	public Text gameOverText;
-
 
 	// Use this for initialization
 	void Start () {
@@ -35,9 +35,14 @@ public class PlayerController : MonoBehaviour {
 		// Example: get controller's current orientation:
 		Quaternion ori = GvrController.Orientation;
 
+
 		// If you want a vector that points in the direction of the controller
 		// you can just multiply this quat by Vector3.forward:
 		Vector3 vector = ori * Vector3.forward;
+
+		Quaternion cameraOrientation =mainCamera.transform.rotation;
+		Vector3 cameraOrientationVector = cameraOrientation * Vector3.forward;
+		cameraOrientationVector.Normalize ();
 
 		if (healthBarSlider.value > 0) {
 			if (GvrController.ClickButtonDown) {
@@ -46,17 +51,24 @@ public class PlayerController : MonoBehaviour {
 				string clickPosition = checkTouchPadClickPosition (touchPos);
 				switch (clickPosition) {
 				case "TOP":
-					Vector3 moveForward = new Vector3 (0, 0, 1);
+					//Vector3 moveForward = new Vector3 (0, 0, 1);
 					//player.transform.position += moveForward; 
 					//rigidBodyPlayer.velocity = moveForward;
 					//rigidBodyPlayer.MovePosition(player.transform.position += moveForward);
+					//iTween.MoveTo (player, player.transform.position + moveForward, 2f);
+					//iTween.MoveTo (player, cameraOrientationVector, 2f);
+					//this.transform.Translate(mainCamera.transform.forward, Space.World);
+					Vector3 moveForward = mainCamera.transform.forward;
+					moveForward.y = 0;
+
 					iTween.MoveTo (player, player.transform.position + moveForward, 2f);
 					//iTween.MoveTo (player, vector, 2f);
 
 					//healthBarSlider.value -= .02f;
 					break;
 				case "RIGHT":
-					Vector3 moveRight = new Vector3 (1, 0, 0);
+					Vector3 moveRight = mainCamera.transform.right;
+					moveRight.y = 0;
 					//player.transform.position += moveRight;  
 					//rigidBodyPlayer.velocity = moveRight;
 
@@ -66,7 +78,8 @@ public class PlayerController : MonoBehaviour {
 					//healthBarSlider.value -= .1f;
 					break;
 				case "BOTTOM":
-					Vector3 moveBack = new Vector3 (0, 0, -1);
+					Vector3 moveBack = -mainCamera.transform.forward;
+					moveBack.y = 0;
 					//rigidBodyPlayer.velocity = moveBack;
 
 					//player.transform.position += moveBack;  
@@ -76,7 +89,8 @@ public class PlayerController : MonoBehaviour {
 					//healthBarSlider.value -= .05f;
 					break;
 				case "LEFT":
-					Vector3 moveLeft = new Vector3 (-1, 0, 0);
+					Vector3 moveLeft = -mainCamera.transform.right;
+					moveLeft.y = 0;
 					//player.transform.position += moveLeft;
 					//rigidBodyPlayer.velocity = moveLeft;
 
@@ -121,15 +135,25 @@ public class PlayerController : MonoBehaviour {
 		} else {
 			isGameOver = true; 
 			gameOverText.enabled = true;
+			gameOverText.text = "Got Burned! Try Again. Press AppButton";
 
 		}
+		bool isFireActiveNow = isFireActive ();
+
 		if (GvrController.AppButtonDown) {
-			if (isGameOver) {
+			if (isGameOver || !isFireActiveNow) {
 				ResetScene ();
 			} else {
 				//rigidBodyPlayer.velocity = Vector3.zero;
 			}
 		}
+
+		if (!isFireActiveNow && !isGameOver) {
+			gameOverText.enabled = true;
+			gameOverText.text = "Congratulations! Succesfully Extinguished All Fire. Press AppButton";
+			gameOverText.color = Color.green;
+		}
+
 	}
 	public void ResetScene() 
 	{
@@ -158,7 +182,7 @@ public class PlayerController : MonoBehaviour {
 		}else if((touchPos.x > 0.25 && touchPos.x < 0.75) &&(touchPos.y > 0.25 && touchPos.y < 0.75)){
 			return "CENTER";
 		}
-		return "TOP";
+		return "";
 	}
 
 	void OnCollisionEnter(Collision collision) {
@@ -173,5 +197,15 @@ public class PlayerController : MonoBehaviour {
 			Rigidbody rigidBodyPlayer = player.GetComponent<Rigidbody> ();
 			rigidBodyPlayer.isKinematic = false;
 		}
+	}
+
+	public bool isFireActive(){
+		var particleSystems = GameObject.FindGameObjectsWithTag ("Fire");
+		foreach (var particleSystem in particleSystems) {
+			if (particleSystem.GetComponent<ParticleSystem>().emission.enabled) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
